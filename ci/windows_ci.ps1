@@ -77,15 +77,21 @@ function Build-angle() {
     python scripts/bootstrap.py
     gclient sync
 
-    gn gen out/Release_x86 --args='is_debug=false target_cpu=""x86""'
+    # Build both DLLs and static libraries for x86
+    gn gen out/Release_x86 --args='is_debug=false target_cpu="x86"'
     type out/Release_x86/args.gn
     autoninja -C out\Release_x86 libEGL
     autoninja -C out\Release_x86 libGLESv2
+    autoninja -C out\Release_x86 libEGL_static
+    autoninja -C out\Release_x86 libGLESv2_static
 
-    gn gen out/Release_x64 --args='is_debug=false target_cpu=""x64""'
+    # Build both DLLs and static libraries for x64
+    gn gen out/Release_x64 --args='is_debug=false target_cpu="x64"'
     type out/Release_x64/args.gn
     autoninja -C out\Release_x64 libEGL
     autoninja -C out\Release_x64 libGLESv2
+    autoninja -C out\Release_x64 libEGL_static
+    autoninja -C out\Release_x64 libGLESv2_static
 
     dir out\Release_x64
     dir out\Release_x86
@@ -93,6 +99,20 @@ function Build-angle() {
     cd ..
     mkdir angle_dlls\Release_x64
     mkdir angle_dlls\Release_x86
+    mkdir angle_dlls\Release_x64\bin\static
+    mkdir angle_dlls\Release_x86\bin\static
+    
+    # Copy DLLs (original behavior)
     cp angle_src\out\Release_x64\*.dll angle_dlls\Release_x64
     cp angle_src\out\Release_x86\*.dll angle_dlls\Release_x86
+    
+    # Copy static libraries (.lib files)
+    cp angle_src\out\Release_x64\obj\src\libEGL\libEGL_static.lib angle_dlls\Release_x64\bin\static\libEGL.lib
+    cp angle_src\out\Release_x64\obj\src\libGLESv2\libGLESv2_static.lib angle_dlls\Release_x64\bin\static\libGLESv2.lib
+    cp angle_src\out\Release_x86\obj\src\libEGL\libEGL_static.lib angle_dlls\Release_x86\bin\static\libEGL.lib
+    cp angle_src\out\Release_x86\obj\src\libGLESv2\libGLESv2_static.lib angle_dlls\Release_x86\bin\static\libGLESv2.lib
+    
+    # Copy header files for static linking
+    mkdir angle_dlls\include
+    cp -r angle_src\include\* angle_dlls\include\
 }
